@@ -1,0 +1,128 @@
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Container, Card, CardContent, Typography, Grid, CircularProgress, Box } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import { getUser } from '../../utils/api_user';
+import { getOrdersByUserId } from '../../utils/api_orders';
+import Header from '../../components/Header';
+import { useParams } from "react-router-dom";
+
+export default function Profile() {
+  const { enqueueSnackbar } = useSnackbar();
+  const { id } = useParams();
+
+  const { data: user, error: userError, isLoading: userLoading } = useQuery({
+    queryKey: ["users", id],
+    queryFn: () => getUser(id),
+  });
+
+  const { data: orders, error: ordersError, isLoading: ordersLoading } = useQuery({
+    queryKey: ["orders", id],
+    queryFn: () => getOrdersByUserId(id),
+  });
+
+  // Get the current date and time
+  const currentDateTime = new Date();
+
+  // Filter orders to include only those with a date and time in the future
+  const filteredOrders = orders && orders.filter(order => {
+    // Split the date string into year, month, and day
+    const [year, month, day] = order.selectedDate.split('-').map(num => parseInt(num, 10));
+//  order.selectedDate.split('-') splits the date string (e.g., "2024-06-11") into an array of strings: ["2024", "06", "11"].
+// .map(num => parseInt(num, 10)) converts each string in the array to an integer.
+// num is each element in the array of strings.
+// parseInt(num, 10) converts the string num to an integer using base 10.
+// The result is an array of integers: [2024, 6, 11].
+  
+    // Split the time string into hours and minutes
+    const [hours, minutes] = order.selectedTime.split(':').map(num => parseInt(num, 10));
+//  order.selectedTime.split(':') splits the time string (e.g., "10:00") into an array of strings: ["10", "00"].
+// .map(num => parseInt(num, 10)) converts each string in the array to an integer.
+// num is each element in the array of strings.
+// parseInt(num, 10) converts the string num to an integer using base 10.
+// The result is an array of integers: [10, 0].
+  
+    // Create a new Date object for the order's date and time
+    const orderDateTime = new Date(year, month - 1, day, hours, minutes);
+  
+    // Check if the order's date and time is after the current date and time
+    return orderDateTime > currentDateTime;
+  });
+
+  // Show a loading spinner while data is being fetched
+  if (userLoading || ordersLoading) {
+    return (
+      <Container>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  // Show an error message if there was an error fetching the user data
+  if (userError) {
+    return <Container>{userError.message}</Container>;
+  }
+
+  // Show an error message if there was an error fetching the orders data
+  if (ordersError) {
+    return <Container>{ordersError.message}</Container>;
+  }
+
+  return (
+    <>
+      <Header />
+      <Box sx={{ backgroundColor: '#181818', minHeight: '100vh', padding: '20px 0' }}>
+        <Container sx={{ marginTop: '80px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ marginTop: 4, backgroundColor: '#242424' }}>
+                <CardContent>
+                  <Typography variant="h4" gutterBottom color="white">
+                    User Profile
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography variant="body1" color="gray"><strong>Name:</strong> {user.name}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="body1" color="gray"><strong>Email:</strong> {user.email}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="body1" color="gray"><strong>Role:</strong> {user.role}</Typography>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card sx={{ marginTop: 4, backgroundColor: '#242424' }}>
+                <CardContent>
+                  <Typography variant="h4" gutterBottom color="white">
+                    User Orders
+                  </Typography>
+                  {filteredOrders && filteredOrders.length > 0 ? (
+                    filteredOrders.map(order => (
+                      <Card key={order._id} sx={{ marginBottom: 2, backgroundColor: '#2c2c2c' }}>
+                        <CardContent>
+                          <Typography variant="body1" color="gray"><strong>Movie:</strong> {order.movieName}</Typography>
+                          <Typography variant="body1" color="gray"><strong>Date:</strong> {order.selectedDate}</Typography>
+                          <Typography variant="body1" color="gray"><strong>Time:</strong> {order.selectedTime}</Typography>
+                          <Typography variant="body1" color="gray"><strong>Seats:</strong> {order.selectedSeats.join(', ')}</Typography>
+                          <Typography variant="body1" color="gray"><strong>Total Price:</strong> ${order.totalPrice}</Typography>
+                          <Typography variant="body1" color="gray"><strong>Status:</strong> {order.status}</Typography>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <Typography variant="body1" sx={{ color: 'white' }}>No incoming orders found.</Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+    </>
+  );
+}
