@@ -68,11 +68,6 @@ export default function UserTableList() {
     },
   });
 
-  // Function to handle role change
-  const handleRoleChange = (userId, newRole) => {
-    updateUserRoleMutation.mutate({ id: userId, role: newRole });
-  };
-
   // Function to handle user deletion
   const handleUserDelete = (event, userId) => {
     event.preventDefault();
