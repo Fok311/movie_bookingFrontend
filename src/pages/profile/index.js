@@ -21,35 +21,12 @@ export default function Profile() {
     queryFn: () => getOrdersByUserId(id),
   });
 
-  // Get the current date and time
-  const currentDateTime = new Date();
+  console.log("User:", user);
+  console.log("Orders:", orders);
 
-  // Filter orders to include only those with a date and time in the future
-  const filteredOrders = orders && orders.filter(order => {
-    // Split the date string into year, month, and day
-    const [year, month, day] = order.selectedDate.split('-').map(num => parseInt(num, 10));
-//  order.selectedDate.split('-') splits the date string (e.g., "2024-06-11") into an array of strings: ["2024", "06", "11"].
-// .map(num => parseInt(num, 10)) converts each string in the array to an integer.
-// num is each element in the array of strings.
-// parseInt(num, 10) converts the string num to an integer using base 10.
-// The result is an array of integers: [2024, 6, 11].
-  
-    // Split the time string into hours and minutes
-    const [hours, minutes] = order.selectedTime.split(':').map(num => parseInt(num, 10));
-//  order.selectedTime.split(':') splits the time string (e.g., "10:00") into an array of strings: ["10", "00"].
-// .map(num => parseInt(num, 10)) converts each string in the array to an integer.
-// num is each element in the array of strings.
-// parseInt(num, 10) converts the string num to an integer using base 10.
-// The result is an array of integers: [10, 0].
-  
-    // Create a new Date object for the order's date and time
-    const orderDateTime = new Date(year, month - 1, day, hours, minutes);
-  
-    // Check if the order's date and time is after the current date and time
-    return orderDateTime > currentDateTime;
-  });
+  // Ensure orders is not undefined before filtering
+  const filteredOrders = orders && orders.filter(order => order.customerId === id);
 
-  // Show a loading spinner while data is being fetched
   if (userLoading || ordersLoading) {
     return (
       <Container>
@@ -58,12 +35,10 @@ export default function Profile() {
     );
   }
 
-  // Show an error message if there was an error fetching the user data
   if (userError) {
     return <Container>{userError.message}</Container>;
   }
 
-  // Show an error message if there was an error fetching the orders data
   if (ordersError) {
     return <Container>{ordersError.message}</Container>;
   }
@@ -115,7 +90,7 @@ export default function Profile() {
                       </Card>
                     ))
                   ) : (
-                    <Typography variant="body1" sx={{ color: 'white' }}>No incoming orders found.</Typography>
+                    <Typography variant="body1" sx={{ color: 'white' }}>No orders found.</Typography>
                   )}
                 </CardContent>
               </Card>
