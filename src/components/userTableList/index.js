@@ -110,6 +110,7 @@ export default function UserTableList() {
                   <IconButton
                     color="error"
                     onClick={(event) => handleUserDelete(event, row._id)}
+                    disabled={currentUser._id === row._id}
                   >
                     <DeleteIcon />
                   </IconButton>
